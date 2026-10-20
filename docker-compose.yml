@@ -1,0 +1,72 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - ecommerce
+
+  user-service:
+    build: ./backend/user-service
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_users
+    depends_on:
+      - mongo
+    networks:
+      - ecommerce
+
+  product-service:
+    build: ./backend/product-service
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_products
+    depends_on:
+      - mongo
+    networks:
+      - ecommerce
+
+  cart-service:
+    build: ./backend/cart-service
+    restart: unless-stopped
+    environment:
+      PORT: 3003
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_carts
+    depends_on:
+      - mongo
+    networks:
+      - ecommerce
+
+  order-service:
+    build: ./backend/order-service
+    restart: unless-stopped
+    environment:
+      PORT: 3004
+      MONGODB_URI: mongodb://mongo:27017/ecommerce_orders
+    depends_on:
+      - mongo
+    networks:
+      - ecommerce
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - user-service
+      - product-service
+      - cart-service
+      - order-service
+    networks:
+      - ecommerce
+
+volumes:
+  mongo_data:
+
+networks:
+  ecommerce:
+    driver: bridge
